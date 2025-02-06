@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/ansible-community/ansible-lint.git
+    rev: v6.20.0
+    hooks:
+      - id: ansible-lint
+        files: \.(yaml|yml)$
+        language: python
+        additional_dependencies:
+          - ansible==8.3.0
+          - boto
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.1
+    hooks:
+      - id: gitleaks
