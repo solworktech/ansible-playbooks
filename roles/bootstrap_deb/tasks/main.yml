@@ -1,0 +1,122 @@
+---
+- name: "Set hostname"
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Set timezone to UTC
+  community.general.timezone:
+    name: Etc/UTC
+
+- name: "Add dev_group group"
+  ansible.builtin.group:
+    name: "{{ dev_group }}"
+    system: "true"
+
+- name: "Create staff accounts"
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    comment: "{{ item.display_name }}"
+    groups: "{{ item.groups }}"
+    state: "{{ item.state }}"
+    shell: /bin/bash
+  with_items: "{{ user_accounts }}"
+
+- name: "Allow group dev to run all commends with sudo and no passwd"
+  community.general.sudoers:
+    name: dev-group-sudo-nopasswd
+    group: "{{ dev_group }}"
+    commands: ALL
+    nopassword: true
+
+- name: "Add authorized keys"
+  ansible.posix.authorized_key:
+    user: "{{ item.username }}"
+    state: "{{ item.state }}"
+    key: "{{ lookup('file', '../../../files/ssh_pub_keys/{{ item.username }}.key.pub') }}"
+  with_items: "{{ user_accounts }}"
+- name: Create /etc/apt/apt.conf.d/73disable-recommend-suggests
+  ansible.builtin.copy:
+    src: 73disable-recommend-suggests
+    dest: /etc/apt/apt.conf.d/
+    owner: root
+    group: root
+    mode: "0644"
+- name: Copy .bash_login
+  ansible.builtin.copy:
+    src: .bash_login
+    dest: /home/{{ item.username }}/.bash_login
+    owner: root
+    group: root
+    mode: "0644"
+  with_items: "{{ user_accounts }}"
+- name: Copy bash_login onto ~root
+  ansible.builtin.copy:
+    src: .bash_login
+    dest: /root/.bash_login
+    owner: root
+    group: root
+    mode: "0644"
+- name: Copy motd
+  ansible.builtin.copy:
+    src: "motd.{{ inventory_hostname }}"
+    dest: /etc/motd-ansible
+    owner: root
+    group: root
+    mode: "0644"
+    # - name: Update all packages to their latest version
+    # ansible.builtin.apt:
+    # name: "*"
+    # state: latest  # noqa package-latest
+    # update_cache: true
+- name: Install packages
+  ansible.builtin.apt:
+    update_cache: true
+    pkg:
+      - "postfix"
+      - "systemd-timesyncd"
+      - "logrotate"
+      - "rsyslog"
+      - "prometheus-postfix-exporter"
+      - "prometheus-node-exporter"
+      - "htop"
+      - "strace"
+      - "nmap"
+      - "curl"
+      - "telnet"
+      - "aptitude"
+      - "apt-file"
+      - "gdebi-core"
+      - "net-tools"
+      - "rsync"
+      - "unzip"
+      - "gnupg"
+      - "software-properties-common"
+      - "toilet"
+      - "lolcat"
+      - "screenfetch"
+      - "awscli"
+      - "cron"
+- name: "Remove unattended-upgrades package"
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    purge: true
+    state: absent
+
+- name: "Fetch ZAJE install script"
+  ansible.builtin.uri:
+    url: https://raw.githubusercontent.com/jessp01/zaje/master/install_zaje.sh
+    return_content: true
+  register: zaje_installer
+
+- name: Run zaje_installer   #   noqa yaml[no-changed-when]
+  ansible.builtin.command:
+    cmd: sh -s -- -y
+    stdin: "{{ zaje_installer.content }}"
+  register: zaje_output
+  changed_when: zaje_output.rc != 0
+
+- name: Copy zaje config
+  ansible.posix.synchronize:
+    src: /root/.config/zaje/syntax_files
+    dest: /etc/zaje/syntax_files
+  delegate_to: "{{ inventory_hostname }}"

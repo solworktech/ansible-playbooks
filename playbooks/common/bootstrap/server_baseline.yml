@@ -1,0 +1,12 @@
+---
+- hosts: "{{ variable_host | default('localhost') }}"
+  remote_user: "{{ssh_user}}"
+  become: true
+  become_method: ansible.builtin.sudo
+  vars_files:
+    - "../../../group_vars/user-accounts.yml"
+    - "../../../group_vars/your_creds.yml"
+  name: "Server baseline"
+  roles:
+    - bootstrap_deb
+#    - consul

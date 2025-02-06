@@ -1,0 +1,16 @@
+---
+dev_group: "dev"
+
+#
+# Never delete entries from this file, to remove an account mark it
+# "state: absent", this ensures the account is properly disabled.
+
+
+user_accounts:
+
+  - {
+    username: jesse,
+    display_name: "Jesse Portnoy",
+    state: present,
+    groups: "{{ dev_group }}",
+  }

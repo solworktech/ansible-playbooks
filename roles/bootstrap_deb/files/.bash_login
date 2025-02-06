@@ -1,0 +1,23 @@
+TERM=xterm-color
+HISTTIMEFORMAT="%F %T: "
+export TERM HISTTIMEFORMAT
+PS1='${debian_chroot:+($debian_chroot)}\[\033[01;33m\]\u@\[\033\e[01;32m\]\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+if [ $(id -u) -eq 0 ];then
+	PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\]\u@\[\033\e[01;32m\]\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+fi
+PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+if [[ -n $SSH_CONNECTION ]] ; then 
+    screenfetch
+    toilet "Welcome to $HOSTNAME" -f future.tlf -t | /usr/games/lolcat
+    /usr/games/lolcat -F 0.003 /etc/motd-ansible
+fi
+
+export LS_OPTIONS='--color=auto'
+eval "$(dircolors)"
+alias ls='ls $LS_OPTIONS'
+alias ll='ls $LS_OPTIONS -l'
+alias l='ls $LS_OPTIONS -lA'
+alias grep='grep --color'
+
+# Some more alias to avoid making mistakes:
+alias rm='rm -i'
