@@ -57,6 +57,11 @@ Install the `pre-commit` util:
 pip install pre-commit
 ```
 
+or, on Debian based systems:
+```sh
+# apt install pre-commit
+```
+
 Generate `.git/hooks/pre-commit`:
 ```sh
 pre-commit install
